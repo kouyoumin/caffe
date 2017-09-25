@@ -2,6 +2,7 @@
 #include <opencv2/core/core.hpp>
 #endif  // USE_OPENCV
 #include <stdint.h>
+#include <time.h>
 
 #include <vector>
 
@@ -18,6 +19,8 @@ DataLayer<Dtype>::DataLayer(const LayerParameter& param)
   db_.reset(db::GetDB(param.data_param().backend()));
   db_->Open(param.data_param().source(), db::READ);
   cursor_.reset(db_->NewCursor());
+  epoch_ = 0;
+  srand( (unsigned)time(NULL));
 }
 
 template <typename Dtype>
@@ -60,7 +63,7 @@ template <typename Dtype>
 bool DataLayer<Dtype>::Skip() {
   int size = Caffe::solver_count();
   int rank = Caffe::solver_rank();
-  bool keep = (offset_ % size) == rank ||
+  bool keep = ((offset_ % size) == rank && (rand() % (epoch_?10:1)) == 0) ||
               // In test mode, only rank 0 runs, so avoid skipping
               this->layer_param_.phase() == TEST;
   return !keep;
@@ -70,8 +73,9 @@ template<typename Dtype>
 void DataLayer<Dtype>::Next() {
   cursor_->Next();
   if (!cursor_->valid()) {
+    epoch_++;
     LOG_IF(INFO, Caffe::root_solver())
-        << "Restarting data prefetching from start.";
+        << "Restarting data prefetching from start (" << epoch_ << ").";
     cursor_->SeekToFirst();
   }
   offset_++;
