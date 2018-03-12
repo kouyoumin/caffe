@@ -442,6 +442,10 @@ message TransformationParameter {
   optional bool force_color = 6 [default = false];
   // Force the decoded image to have 1 color channels.
   optional bool force_gray = 7 [default = false];
+  // Cut out a square area randomly from image
+  optional int32 cutout = 8 [default = 0];
+  // Probability that cut out occurs
+  optional float cutout_ratio = 9 [default = 0.5];
 }
 
 // Message that stores parameters shared by loss layers

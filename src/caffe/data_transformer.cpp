@@ -36,6 +36,7 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
       mean_values_.push_back(param_.mean_value(c));
     }
   }
+  srand (time(NULL));
 }
 
 template<typename Dtype>
@@ -52,6 +53,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   const bool has_mean_file = param_.has_mean_file();
   const bool has_uint8 = data.size() > 0;
   const bool has_mean_values = mean_values_.size() > 0;
+  const int cutout = param_.cutout();
+  const Dtype cutout_ratio = param_.cutout_ratio();
 
   CHECK_GT(datum_channels, 0);
   CHECK_GE(datum_height, crop_size);
@@ -80,6 +83,11 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 
   int h_off = 0;
   int w_off = 0;
+  int mask_center_w = 0;
+  int mask_center_h = 0;
+  int mask_half = 0;
+  bool cutout_enabled = false;
+  
   if (crop_size) {
     height = crop_size;
     width = crop_size;
@@ -91,6 +99,14 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
       h_off = (datum_height - crop_size) / 2;
       w_off = (datum_width - crop_size) / 2;
     }
+  }
+  
+  if (cutout > 0){
+    mask_center_w = rand()%width;
+    mask_center_h = rand()%height;
+    mask_half = cutout/2;
+    int cutout_threshold = cutout_ratio * 1000;
+    cutout_enabled = rand()%1000 < cutout_threshold;
   }
 
   Dtype datum_element;
@@ -111,14 +127,46 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
           datum_element = datum.float_data(data_index);
         }
         if (has_mean_file) {
-          transformed_data[top_index] =
-            (datum_element - mean[data_index]) * scale;
+          if (cutout_enabled ){
+            if ((w > mask_center_w - mask_half) && (w < mask_center_w + mask_half) && (h > mask_center_h - mask_half) && (h < mask_center_h + mask_half)){
+              transformed_data[top_index] = 0;
+            }
+            else {
+              transformed_data[top_index] =
+                (datum_element - mean[data_index]) * scale;
+            }
+          }
+          else {
+            transformed_data[top_index] =
+              (datum_element - mean[data_index]) * scale;
+          }
         } else {
           if (has_mean_values) {
-            transformed_data[top_index] =
-              (datum_element - mean_values_[c]) * scale;
+            if (cutout_enabled ){
+              if ((w > mask_center_w - mask_half) && (w < mask_center_w + mask_half) && (h > mask_center_h - mask_half) && (h < mask_center_h + mask_half)){
+                transformed_data[top_index] = 0;
+              }
+              else {
+                transformed_data[top_index] =
+                  (datum_element - mean_values_[c]) * scale;
+              }
+            }
+            else {
+              transformed_data[top_index] =
+                (datum_element - mean_values_[c]) * scale;
+            }
           } else {
-            transformed_data[top_index] = datum_element * scale;
+            if (cutout_enabled ){
+              if ((w > mask_center_w - mask_half) && (w < mask_center_w + mask_half) && (h > mask_center_h - mask_half) && (h < mask_center_h + mask_half)){
+                transformed_data[top_index] = 0;
+              }
+              else {
+                transformed_data[top_index] = datum_element * scale;
+              }
+            }
+            else {
+              transformed_data[top_index] = datum_element * scale;
+            }
           }
         }
       }
