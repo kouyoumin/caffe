@@ -63,7 +63,7 @@ template <typename Dtype>
 bool DataLayer<Dtype>::Skip() {
   int size = Caffe::solver_count();
   int rank = Caffe::solver_rank();
-  bool keep = ((offset_ % size) == rank && (rand() % (epoch_?10:1)) == 0) ||
+  bool keep = ((offset_ % size) == rank && (rand() % (epoch_?2:1)) == 0) ||
               // In test mode, only rank 0 runs, so avoid skipping
               this->layer_param_.phase() == TEST;
   return !keep;
