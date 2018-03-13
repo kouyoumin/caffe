@@ -107,6 +107,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     mask_half = cutout/2;
     int cutout_threshold = cutout_ratio * 1000;
     cutout_enabled = rand()%1000 < cutout_threshold;
+    // for debug
+    //printf("Cutout center: (%d, %d), half=%d, threshold=%d, enabled=%s\n", mask_center_w, mask_center_h, mask_half, cutout_threshold, cutout_enabled?"True":"False");
   }
 
   Dtype datum_element;
