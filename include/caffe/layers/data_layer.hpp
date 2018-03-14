@@ -33,6 +33,7 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   shared_ptr<db::DB> db_;
   shared_ptr<db::Cursor> cursor_;
   uint64_t offset_;
+  bool random_skip_;
   uint64_t epoch_;
 };
 

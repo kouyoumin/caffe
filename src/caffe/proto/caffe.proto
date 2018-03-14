@@ -684,6 +684,7 @@ message DataParameter {
   // Prefetch queue (Increase if data feeding bandwidth varies, within the
   // limit of device memory for GPU training)
   optional uint32 prefetch = 10 [default = 4];
+  optional bool random_skip = 11 [default = false];
 }
 
 message DropoutParameter {

@@ -19,6 +19,7 @@ DataLayer<Dtype>::DataLayer(const LayerParameter& param)
   db_.reset(db::GetDB(param.data_param().backend()));
   db_->Open(param.data_param().source(), db::READ);
   cursor_.reset(db_->NewCursor());
+  random_skip_ = param.data_param().random_skip();
   epoch_ = 0;
   srand( (unsigned)time(NULL));
 }
@@ -63,7 +64,7 @@ template <typename Dtype>
 bool DataLayer<Dtype>::Skip() {
   int size = Caffe::solver_count();
   int rank = Caffe::solver_rank();
-  bool keep = ((offset_ % size) == rank && (rand() % (epoch_?2:1)) == 0) ||
+  bool keep = ((offset_ % size) == rank && (!random_skip_ || (random_skip_ && (rand() % (epoch_?2:1)) == 0))) ||
               // In test mode, only rank 0 runs, so avoid skipping
               this->layer_param_.phase() == TEST;
   return !keep;
